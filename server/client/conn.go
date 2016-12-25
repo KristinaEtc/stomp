@@ -161,7 +161,15 @@ func (c *Conn) sendImmediately(f *frame.Frame) error {
 	return c.writeFrame(f)
 }
 
+// Write frame to client, with timeout
 func (c *Conn) writeFrame(f *frame.Frame) error {
+	if c.writeTimeout > 0 {
+		err := c.rw.SetWriteDeadline(time.Now().Add(c.writeTimeout * 3))
+		if err != nil {
+			c.log.Errorf("writeFrame: error setting deadline %s", err.Error())
+			return err
+		}
+	}
 	err := c.writer.Write(f)
 	if err != nil {
 		c.log.Errorf("writeFrame: error write %s", err.Error())
